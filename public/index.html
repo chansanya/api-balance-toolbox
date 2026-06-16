@@ -126,6 +126,8 @@
     .site-name { font-size: 1.08rem; font-weight: 650; color: #1a1d24; padding-left: 6px; margin-bottom: 8px; }
     .site-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 6px; margin-bottom: 10px; }
     .site-tag { font-size: .7rem; background: #eef4ff; color: #005bea; padding: 2px 9px; border-radius: 999px; font-weight: 500; }
+    .site-tag-clickable { cursor: pointer; text-decoration: none; transition: all .2s; }
+    .site-tag-clickable:hover { background: #005bea; color: white; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,91,234,.3); }
     .site-note { font-size: .85rem; color: #6c757d; line-height: 1.5; margin-bottom: 12px; padding-left: 6px;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .site-url { font-size: .8rem; color: #005bea; padding-left: 6px; word-break: break-all; }
@@ -215,6 +217,7 @@
             <input id="site-name" placeholder="站点名称">
             <input id="site-url" placeholder="链接(https://...)">
             <input id="site-note" placeholder="简介(可选)">
+            <input id="site-signin-url" placeholder="签到地址(可选,如有「签到」标签可点击跳转)">
             <div class="tag-edit">
               <div id="tag-selected" class="tag-selected"></div>
               <div class="tag-presets">
@@ -512,7 +515,17 @@
     }
     function siteCard(s, canDel) {
       const del = canDel ? `<button class="site-del" title="删除" onclick="deleteSite(${s.id}, event)">×</button>` : '';
-      const tags = (s.tags || []).map((t) => `<span class="site-tag">${escapeHtml(t)}</span>`).join('');
+
+      // 如果有"签到"标签且有签到地址，让签到标签可点击跳转
+      const signinUrl = s.signin_url || s.url; // 没有签到地址就跳主站
+      const tags = (s.tags || []).map((t) => {
+        const tagText = escapeHtml(t);
+        if (t === '签到' && s.signin_url) {
+          return `<a href="${escapeHtml(signinUrl)}" target="_blank" rel="noopener noreferrer" class="site-tag site-tag-clickable" onclick="event.stopPropagation()" title="跳转到签到页面">${tagText}</a>`;
+        }
+        return `<span class="site-tag">${tagText}</span>`;
+      }).join('');
+
       const note = s.note ? `<div class="site-note">${escapeHtml(s.note)}</div>` : '';
       return `<a class="site-card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">
         ${del}
@@ -526,10 +539,11 @@
       const name = $('#site-name').value.trim();
       const url = $('#site-url').value.trim();
       const note = $('#site-note').value.trim();
+      const signin_url = $('#site-signin-url').value.trim();
       if (!name || !url) { toast('站点名称和链接必填', 'error'); return; }
       try {
-        const { message } = await api('/api/sites', { method: 'POST', body: JSON.stringify({ name, url, note, tags: selectedTags }) });
-        $('#site-name').value = $('#site-url').value = $('#site-note').value = '';
+        const { message } = await api('/api/sites', { method: 'POST', body: JSON.stringify({ name, url, note, tags: selectedTags, signin_url }) });
+        $('#site-name').value = $('#site-url').value = $('#site-note').value = $('#site-signin-url').value = '';
         selectedTags = []; renderSelectedTags();
         hideSiteForm();
         toast(message); loadSites();
