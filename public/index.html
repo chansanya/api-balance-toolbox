@@ -521,11 +521,10 @@
       const edit = canDel ? `<button class="site-edit" title="编辑" onclick="editSite(${s.id}, event)">✎</button>` : '';
 
       // 如果有"签到"标签且有签到地址，让签到标签可点击跳转
-      const signinUrl = s.signin_url || s.url; // 没有签到地址就跳主站
       const tags = (s.tags || []).map((t) => {
         const tagText = escapeHtml(t);
         if (t === '签到' && s.signin_url) {
-          return `<a href="${escapeHtml(signinUrl)}" target="_blank" rel="noopener noreferrer" class="site-tag site-tag-clickable" onclick="event.stopPropagation()" title="跳转到签到页面">${tagText}</a>`;
+          return `<span class="site-tag site-tag-clickable" onclick="window.open('${escapeHtml(s.signin_url)}', '_blank'); event.stopPropagation();" title="跳转到签到页面">${tagText}</span>`;
         }
         return `<span class="site-tag">${tagText}</span>`;
       }).join('');
