@@ -536,7 +536,6 @@
         <div class="site-name">${escapeHtml(s.name)}</div>
         ${tags ? `<div class="site-tags">${tags}</div>` : ''}
         ${note}
-        <div class="site-url">${escapeHtml(displayUrl(s.url))}</div>
       </a>`;
     }
     async function deleteSite(id, ev) {
