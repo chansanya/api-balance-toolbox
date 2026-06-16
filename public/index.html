@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的工具站</title>
+  <title>AI供应商管理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     [hidden] { display: none !important; }
@@ -153,7 +153,7 @@
   <div class="container">
     <div class="header">
       <div class="header-main">
-        <h1>🧰 我的工具站</h1>
+        <h1>🧰 AI供应商管理</h1>
         <p>供应商余额 · 公益站导航</p>
       </div>
       <div class="header-nav">
@@ -537,7 +537,13 @@
     }
     async function deleteSite(id, ev) {
       ev.preventDefault(); ev.stopPropagation();
+
+      // 第一次确认
       if (!confirm('确认删除该公益站点?')) return;
+
+      // 二次确认
+      if (!confirm('再次确认：真的要删除这个站点吗？删除后无法恢复！')) return;
+
       try { const { message } = await api(`/api/sites/${id}`, { method: 'DELETE' }); toast(message); loadSites(); }
       catch (e) { toast(e.message, 'error'); }
     }
