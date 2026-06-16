@@ -126,8 +126,9 @@
     .site-name { font-size: 1.08rem; font-weight: 650; color: #1a1d24; padding-left: 6px; margin-bottom: 8px; }
     .site-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 6px; margin-bottom: 10px; }
     .site-tag { font-size: .7rem; background: #eef4ff; color: #005bea; padding: 2px 9px; border-radius: 999px; font-weight: 500; display: inline-block; }
-    .site-tag-clickable { cursor: pointer; text-decoration: none; transition: all .2s; }
-    .site-tag-clickable:hover { background: #005bea; color: white; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,91,234,.3); }
+    .site-tag-signin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; }
+    .site-tag-clickable { cursor: pointer; text-decoration: none; transition: all .2s; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; }
+    .site-tag-clickable:hover { transform: translateY(-1px) scale(1.05); box-shadow: 0 4px 12px rgba(102,126,234,.4); }
     .site-note { font-size: .85rem; color: #6c757d; line-height: 1.5; margin-bottom: 12px; padding-left: 6px;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .site-url { font-size: .8rem; color: #005bea; padding-left: 6px; word-break: break-all; }
@@ -520,11 +521,16 @@
       const del = canDel ? `<button class="site-del" title="删除" onclick="deleteSite(${s.id}, event)">×</button>` : '';
       const edit = canDel ? `<button class="site-edit" title="编辑" onclick="editSite(${s.id}, event)">✎</button>` : '';
 
-      // 如果有"签到"标签且有签到地址，让签到标签可点击跳转
+      // 签到标签特殊样式
       const tags = (s.tags || []).map((t) => {
         const tagText = escapeHtml(t);
-        if (t === '签到' && s.signin_url) {
-          return `<span class="site-tag site-tag-clickable" onclick="window.open('${escapeHtml(s.signin_url)}', '_blank'); event.stopPropagation();" title="跳转到签到页面">${tagText}</span>`;
+        if (t === '签到') {
+          // 有签到地址：可点击跳转
+          if (s.signin_url) {
+            return `<span class="site-tag site-tag-clickable" onclick="window.open('${escapeHtml(s.signin_url)}', '_blank'); event.stopPropagation();" title="跳转到签到页面">${tagText}</span>`;
+          }
+          // 没有签到地址：仅特殊样式，不可点击
+          return `<span class="site-tag site-tag-signin">${tagText}</span>`;
         }
         return `<span class="site-tag">${tagText}</span>`;
       }).join('');
