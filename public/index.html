@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的工具站</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; padding: 20px; color: #333;
+    }
+    .container { max-width: 860px; margin: 0 auto; background: #fff; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%); color: #fff;
+      padding: 26px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .header h1 { font-size: 1.7rem; margin-bottom: 4px; }
+    .header p { opacity: .9; font-size: .95rem; }
+    .header-nav { display: flex; align-items: center; gap: 18px; white-space: nowrap; }
+    .header-btn { background: rgba(255,255,255,.2); color: #fff; padding: 9px 20px; border-radius: 8px;
+      font-size: .92rem; font-weight: 500; }
+    .header-btn:hover { background: rgba(255,255,255,.32); }
+    .shine-link {
+      cursor: pointer; font-weight: 600; font-size: .98rem; user-select: none;
+      background: linear-gradient(100deg, rgba(255,255,255,.55) 20%, #fff 45%, #ffe9a8 50%, #fff 55%, rgba(255,255,255,.55) 80%);
+      background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+      animation: shine 2.8s linear infinite;
+    }
+    @keyframes shine { from { background-position: 180% center; } to { background-position: -40% center; } }
+    .content { padding: 28px; }
+
+    button { font-family: inherit; cursor: pointer; border: none; transition: all .2s; }
+    .btn { background: #005bea; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: .95rem; font-weight: 500; white-space: nowrap; }
+    .btn:hover { background: #0049c0; }
+    .btn.ghost { background: #eef1f5; color: #005bea; }
+    .btn.ghost:hover { background: #e0e6ef; }
+    input, select, textarea {
+      font-family: inherit; font-size: .95rem; color: #333;
+      padding: 10px 13px; border: 1px solid #d0d7de; border-radius: 8px; background: #fff; width: 100%;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #005bea; box-shadow: 0 0 0 3px rgba(0,91,234,.12); }
+    textarea { resize: vertical; min-height: 96px; font-family: 'Courier New', monospace; font-size: .88rem; }
+
+    .mode-switch { display: inline-flex; background: #eef1f5; border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 20px; }
+    .mode-switch button { background: none; color: #6c757d; padding: 8px 18px; border-radius: 7px; font-size: .92rem; font-weight: 500; }
+    .mode-switch button.active { background: #fff; color: #005bea; box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; }
+
+    .tabs { display: flex; gap: 6px; border-bottom: 2px solid #eef1f5; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabs button { background: none; color: #6c757d; padding: 12px 18px; font-size: .95rem;
+      border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+    .tabs button:hover { color: #005bea; }
+    .tabs button.active { color: #005bea; border-bottom-color: #005bea; font-weight: 600; }
+    .tabs .spacer { flex: 1; min-width: 8px; }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .th-field { display: flex; align-items: center; gap: 8px; color: #6c757d; font-size: .92rem; white-space: nowrap; }
+    .th-field .wrap { position: relative; }
+    .th-field .wrap > span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9aa1ab; }
+    .th-field input { width: 130px; padding-left: 26px; }
+
+    .card { background: #f8f9fa; border-left: 4px solid #005bea; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .card-title { color: #005bea; font-size: 1.2rem; font-weight: 600; }
+    .card-sub { color: #6c757d; font-size: .85rem; margin-top: 4px; }
+    .hint { color: #6c757d; font-size: .86rem; margin: -4px 0 14px; }
+    .total { font-size: 1.4rem; font-weight: 700; color: #1a7f37; white-space: nowrap; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid #e7eaee; font-size: .9rem; }
+    th { background: #eef1f5; color: #495057; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    tr.low td { background: #fdecea; }
+    td.amount { font-weight: 600; text-align: right; white-space: nowrap; }
+    tr.low td.amount { color: #b42318; }
+    .mono { font-family: 'Courier New', monospace; }
+    .ok { color: #1a7f37; } .err { color: #e5484d; }
+    .badge { font-size: .72rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+    .badge-low { background: #e5484d; color: #fff; }
+    .badge-fail { background: #fff0f0; color: #e5484d; border: 1px solid #f5c2c2; }
+    .tag { font-size: .76rem; color: #6c757d; background: #eef1f5; padding: 3px 9px; border-radius: 999px; }
+    .btn-del { background: none; color: #e5484d; font-size: .85rem; padding: 4px 10px; border-radius: 6px; }
+    .btn-del:hover { background: #fdecea; }
+
+    .grand { background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%); color: #fff; border-radius: 10px; padding: 22px 24px; margin-bottom: 16px; }
+    .grand-label { font-size: .9rem; opacity: .9; margin-bottom: 4px; }
+    .grand-num { font-size: 2rem; font-weight: 700; }
+    .sum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 14px; }
+    .sum-card { background: #f8f9fa; border-left: 4px solid #005bea; border-radius: 8px; padding: 18px; cursor: pointer; transition: all .2s; }
+    .sum-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+    .sum-name { color: #005bea; font-weight: 600; }
+    .sum-total { font-size: 1.5rem; font-weight: 700; color: #1a7f37; margin: 6px 0 4px; }
+    .sum-meta { font-size: .8rem; color: #6c757d; }
+    .text-danger { color: #e5484d; font-weight: 600; }
+
+    .form { display: flex; flex-direction: column; gap: 12px; }
+    .form .btn { align-self: flex-start; }
+    .local-bar { display: flex; align-items: center; gap: 10px; }
+    .loading, .empty { text-align: center; color: #9aa1ab; padding: 28px; font-size: .92rem; }
+
+    /* 公益站:折叠入口 + tag 编辑 */
+    .site-add-toggle { background: #f0f5ff; border: 1px dashed #9ec1ff; color: #005bea; border-radius: 10px;
+      padding: 14px; text-align: center; cursor: pointer; font-weight: 500; margin-bottom: 16px; transition: all .2s; }
+    .site-add-toggle:hover { background: #e4eeff; border-color: #005bea; }
+    .tag-edit { display: flex; flex-direction: column; gap: 9px; }
+    .tag-selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; align-items: center; }
+    .tag-empty { color: #9aa1ab; font-size: .82rem; }
+    .tag-chip { display: inline-flex; align-items: center; gap: 5px; background: #005bea; color: #fff; font-size: .78rem; padding: 3px 10px; border-radius: 999px; }
+    .tag-chip b { cursor: pointer; font-weight: 400; opacity: .85; font-size: .9rem; }
+    .tag-chip b:hover { opacity: 1; }
+    .tag-presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .82rem; color: #6c757d; }
+    .tag-preset { color: #005bea; background: #eef4ff; border: 1px solid #d6e4ff; padding: 3px 11px; border-radius: 999px; cursor: pointer; transition: all .2s; }
+    .tag-preset:hover { background: #005bea; color: #fff; border-color: #005bea; }
+
+    /* 公益站卡片 */
+    .site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+    .site-card { position: relative; display: block; background: #fff; border: 1px solid #e7eaee; border-radius: 12px;
+      padding: 18px 18px 16px; text-decoration: none; color: inherit; transition: all .2s; box-shadow: 0 2px 8px rgba(0,0,0,.04); overflow: hidden; }
+    .site-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #00c6fb, #005bea); }
+    .site-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,91,234,.16); border-color: #bcd3ff; }
+    .site-name { font-size: 1.08rem; font-weight: 650; color: #1a1d24; padding-left: 6px; margin-bottom: 8px; }
+    .site-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 6px; margin-bottom: 10px; }
+    .site-tag { font-size: .7rem; background: #eef4ff; color: #005bea; padding: 2px 9px; border-radius: 999px; font-weight: 500; }
+    .site-note { font-size: .85rem; color: #6c757d; line-height: 1.5; margin-bottom: 12px; padding-left: 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .site-url { font-size: .8rem; color: #005bea; padding-left: 6px; word-break: break-all; }
+    .site-del { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(229,72,77,.1); color: #e5484d; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .site-del:hover { background: #e5484d; color: #fff; }
+
+    .modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+    .modal-mask { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+    .modal-box { position: relative; background: #fff; border-radius: 14px; padding: 26px; width: 360px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+    .modal-box h3 { font-size: 1.3rem; margin-bottom: 6px; }
+    .modal-box input { margin: 10px 0 18px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+      color: #fff; background: #1a7f37; padding: 12px 22px; border-radius: 10px; font-size: .92rem; font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25); transition: all .25s; max-width: 90vw; z-index: 101; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #e5484d; }
+
+    @media (max-width: 600px) { .header h1 { font-size: 1.4rem; } .content { padding: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-main">
+        <h1>🧰 我的工具站</h1>
+        <p>供应商余额 · 公益站导航</p>
+      </div>
+      <div class="header-nav">
+        <span id="view-toggle" class="shine-link" onclick="toggleView()">🏵 公益站</span>
+        <button id="auth-btn" class="header-btn" onclick="onAuthBtn()">登录</button>
+      </div>
+    </div>
+    <div class="content">
+      <!-- ============ 余额查询页 ============ -->
+      <div id="page-balance">
+        <div id="mode-switch" class="mode-switch" hidden>
+          <button data-mode="remote" class="active">☁️ 远程 Key</button>
+          <button data-mode="local">🔍 本地查询</button>
+        </div>
+
+        <div id="panel-remote" hidden>
+          <nav class="tabs">
+            <button data-tab="summary" class="active">汇总</button>
+            <button data-tab="deepseek">DeepSeek</button>
+            <button data-tab="siliconflow">SiliconFlow</button>
+            <button data-tab="moonshot">Moonshot</button>
+            <span class="spacer"></span>
+            <button data-tab="keys">Key 管理</button>
+          </nav>
+          <div id="toolbar" class="toolbar">
+            <label class="th-field">余额预警阈值
+              <span class="wrap"><span>¥</span><input class="th-input" type="number" min="0" step="0.01"></span>
+            </label>
+            <button class="btn ghost" onclick="reloadCurrent()">刷新</button>
+          </div>
+          <div id="view"></div>
+        </div>
+
+        <div id="panel-local">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:6px">🔍 本地临时查询</div>
+            <p class="hint">手动输入 key 查询余额,<strong>不会保存到服务器</strong>。无需登录即可使用。</p>
+            <div class="form">
+              <select id="local-supplier"></select>
+              <textarea id="local-keys" placeholder="每行一个 key,支持批量粘贴"></textarea>
+              <div class="local-bar" style="justify-content:space-between">
+                <label class="th-field">余额预警阈值
+                  <span class="wrap"><span>¥</span><input class="th-input" type="number" min="0" step="0.01"></span>
+                </label>
+                <button class="btn" onclick="localQuery()">查询</button>
+              </div>
+            </div>
+          </div>
+          <div id="local-view"></div>
+        </div>
+      </div>
+
+      <!-- ============ 公益站页 ============ -->
+      <div id="page-sites" hidden>
+        <div id="site-add-toggle" class="site-add-toggle" hidden onclick="showSiteForm()">＋ 添加公益站点</div>
+        <div id="site-add" class="card" hidden>
+          <div class="card-title" style="margin-bottom:14px">➕ 添加公益站点</div>
+          <div class="form">
+            <input id="site-name" placeholder="站点名称">
+            <input id="site-url" placeholder="链接(https://...)">
+            <input id="site-note" placeholder="简介(可选)">
+            <div class="tag-edit">
+              <div id="tag-selected" class="tag-selected"></div>
+              <div class="tag-presets">
+                <span>内置:</span>
+                <span class="tag-preset" onclick="addTag('签到')">签到</span>
+                <span class="tag-preset" onclick="addTag('linux.do')">linux.do</span>
+                <span class="tag-preset" onclick="addTag('量大管饱')">量大管饱</span>
+              </div>
+              <input id="tag-custom" placeholder="自定义标签,回车添加">
+            </div>
+            <div class="local-bar">
+              <button class="btn" onclick="addSite()">保存</button>
+              <button class="btn ghost" onclick="hideSiteForm()">收起</button>
+            </div>
+          </div>
+        </div>
+        <div id="site-grid" class="site-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 登录弹框 -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-mask" onclick="closeModal()"></div>
+    <div class="modal-box">
+      <h3>登录</h3>
+      <p class="hint">输入访问口令,加载服务器保存的 key</p>
+      <input id="modal-token" type="password" placeholder="访问口令" autocomplete="current-password">
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeModal()">取消</button>
+        <button class="btn" onclick="doLogin()">登录</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="msg" class="toast"></div>
+
+  <script>
+    const SUPPLIERS = { deepseek: 'DeepSeek', siliconflow: 'SiliconFlow', moonshot: 'Moonshot' };
+    const TOKEN_KEY = 'access_token', TH_KEY = 'balance_threshold';
+    const $ = (s) => document.querySelector(s);
+    let currentTab = 'summary';
+    let currentView = 'balance';
+    let cache = null;
+    let selectedTags = [];
+
+    const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
+    const getThreshold = () => { const v = parseFloat(localStorage.getItem(TH_KEY)); return isNaN(v) ? 10 : v; };
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const displayUrl = (u) => String(u).replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+    // ---- 视图切换 ----
+    function toggleView() {
+      currentView = currentView === 'balance' ? 'sites' : 'balance';
+      renderView();
+    }
+    function renderView() {
+      const onSites = currentView === 'sites';
+      $('#page-balance').hidden = onSites;
+      $('#page-sites').hidden = !onSites;
+      $('#view-toggle').textContent = onSites ? '← 余额查询' : '🏵 公益站';
+      if (onSites) loadSites();
+    }
+
+    // ---- 登录态 ----
+    function renderAuth() {
+      const has = !!getToken();
+      $('#auth-btn').textContent = has ? '退出登录' : '登录';
+      $('#mode-switch').hidden = !has;
+      $('#site-add').hidden = true;            // 表单默认收起
+      $('#site-add-toggle').hidden = !has;     // 折叠入口仅登录显示
+      if (currentView === 'balance') {
+        if (has) switchMode('remote');
+        else { $('#panel-remote').hidden = true; $('#panel-local').hidden = false; }
+      } else {
+        loadSites();
+      }
+    }
+    function onAuthBtn() { getToken() ? logout() : openModal(); }
+    function logout() { localStorage.removeItem(TOKEN_KEY); cache = null; toast('已退出登录'); renderAuth(); }
+    function openModal() { $('#modal').hidden = false; $('#modal-token').value = ''; $('#modal-token').focus(); }
+    function closeModal() { $('#modal').hidden = true; }
+    function doLogin() {
+      const v = $('#modal-token').value.trim();
+      if (!v) { toast('请输入口令', 'error'); return; }
+      localStorage.setItem(TOKEN_KEY, v);
+      closeModal();
+      renderAuth();
+    }
+
+    // ---- 请求 ----
+    async function api(path, opts = {}) {
+      const res = await fetch(path, {
+        ...opts,
+        headers: { 'Content-Type': 'application/json', 'X-Access-Token': getToken(), ...(opts.headers || {}) },
+      });
+      if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); renderAuth(); throw new Error('口令无效,请重新登录'); }
+      const body = await res.json().catch(() => ({ ok: false, message: `HTTP ${res.status}` }));
+      if (!body.ok) throw new Error(body.message || `HTTP ${res.status}`);
+      return body;
+    }
+    let toastTimer;
+    function toast(text, type = 'success') {
+      const el = $('#msg'); el.textContent = text; el.className = `toast show ${type}`;
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    // ---- 模式 / Tab ----
+    function switchMode(mode) {
+      document.querySelectorAll('.mode-switch button[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+      $('#panel-remote').hidden = (mode !== 'remote');
+      $('#panel-local').hidden = (mode !== 'local');
+      if (mode === 'remote') switchTab(currentTab);
+    }
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tabs button[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+      $('#toolbar').hidden = (tab === 'keys');
+      if (tab === 'keys') renderKeysPanel();
+      else if (tab === 'summary') loadSummary();
+      else loadSupplier(tab);
+    }
+    function reloadCurrent() { switchTab(currentTab); }
+
+    // ---- 余额渲染 ----
+    function sortItems(items) {
+      return [...items].sort((a, b) => {
+        const fa = a.status !== '✓', fb = b.status !== '✓';
+        if (fa !== fb) return fa ? 1 : -1;
+        return a.balance - b.balance;
+      });
+    }
+    function row(it, th) {
+      const fail = it.status !== '✓';
+      const low = !fail && it.balance < th;
+      if (fail) return `<tr class="fail"><td class="err">${it.status}</td><td class="mono">${it.key_masked}</td><td class="amount"><span class="badge badge-fail">查询失败</span></td></tr>`;
+      const tag = low ? '<span class="badge badge-low">余额不足</span> ' : '';
+      return `<tr class="${low ? 'low' : ''}"><td class="ok">✓</td><td class="mono">${it.key_masked}</td><td class="amount">${tag}¥${it.balance.toFixed(2)}</td></tr>`;
+    }
+    function renderBalance(s, target = '#view') {
+      const el = $(target);
+      if (!s) { el.innerHTML = '<div class="empty">无数据</div>'; return; }
+      const th = getThreshold();
+      const items = sortItems(s.items);
+      const low = items.filter((i) => i.status === '✓' && i.balance < th).length;
+      const fail = items.filter((i) => i.status !== '✓').length;
+      const sub = `${items.length} 个 key`
+        + (low ? ` · <span class="text-danger">${low} 个余额不足</span>` : (items.length ? ' · 余额充足' : ''))
+        + (fail ? ` · ${fail} 个查询失败` : '');
+      const rows = items.map((it) => row(it, th)).join('') || '<tr><td class="empty" colspan="3">无 key</td></tr>';
+      el.innerHTML = `
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title">${s.name}</div><div class="card-sub">${sub}</div></div>
+            <div class="total">¥${s.total.toFixed(2)}</div>
+          </div>
+          <table>
+            <tr><th>状态</th><th>Key</th><th style="text-align:right">余额</th></tr>
+            ${rows}
+          </table>
+        </div>`;
+    }
+    function renderSummary(list) {
+      const th = getThreshold();
+      const grand = list.reduce((s, x) => s + x.total, 0);
+      const cards = list.map((s) => {
+        const ok = s.items.filter((i) => i.status === '✓');
+        const low = ok.filter((i) => i.balance < th).length;
+        const fail = s.items.length - ok.length;
+        const meta = `${s.items.length} key`
+          + (low ? ` · <span class="text-danger">${low} 不足</span>` : '')
+          + (fail ? ` · ${fail} 失败` : '');
+        return `<div class="sum-card" onclick="switchTab('${s.supplier}')">
+          <div class="sum-name">${s.name}</div>
+          <div class="sum-total">¥${s.total.toFixed(2)}</div>
+          <div class="sum-meta">${meta}</div>
+        </div>`;
+      }).join('');
+      $('#view').innerHTML = `
+        <div class="grand">
+          <div class="grand-label">全部供应商总余额</div>
+          <div class="grand-num">¥${grand.toFixed(2)}</div>
+        </div>
+        <div class="sum-grid">${cards || '<div class="empty">暂无数据</div>'}</div>`;
+    }
+
+    async function loadSupplier(name) {
+      $('#view').innerHTML = '<div class="loading">查询中…</div>';
+      try {
+        const { data } = await api(`/api/balance?supplier=${name}`);
+        cache = () => renderBalance(data[0], '#view');
+        renderBalance(data[0], '#view');
+      } catch (e) { $('#view').innerHTML = ''; toast(e.message, 'error'); }
+    }
+    async function loadSummary() {
+      $('#view').innerHTML = '<div class="loading">汇总中…</div>';
+      try {
+        const { data } = await api('/api/balance');
+        cache = () => renderSummary(data);
+        renderSummary(data);
+      } catch (e) { $('#view').innerHTML = ''; toast(e.message, 'error'); }
+    }
+
+    async function localQuery() {
+      const supplier = $('#local-supplier').value;
+      const keys = $('#local-keys').value.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (!keys.length) { toast('请输入至少一个 key', 'error'); return; }
+      $('#local-view').innerHTML = '<div class="loading">查询中…</div>';
+      try {
+        const { data } = await api('/api/check', { method: 'POST', body: JSON.stringify({ supplier, keys }) });
+        cache = () => renderBalance(data[0], '#local-view');
+        renderBalance(data[0], '#local-view');
+      } catch (e) { $('#local-view').innerHTML = ''; toast(e.message, 'error'); }
+    }
+
+    // ---- Key 管理 ----
+    function supplierOptions(withAll) {
+      return (withAll ? '<option value="">全部</option>' : '')
+        + Object.entries(SUPPLIERS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+    }
+    function renderKeysPanel() {
+      $('#view').innerHTML = `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">导入 Key</div>
+          <div class="form">
+            <select id="imp-supplier">${supplierOptions(false)}</select>
+            <textarea id="imp-keys" placeholder="每行一个 key,支持批量粘贴"></textarea>
+            <button class="btn" onclick="importKeys()">导入</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">已有 Key</div>
+            <select id="key-supplier" style="width:auto" onchange="loadKeys()">${supplierOptions(true)}</select>
+          </div>
+          <table id="key-list"></table>
+        </div>`;
+      loadKeys();
+    }
+    async function loadKeys() {
+      const supplier = $('#key-supplier').value;
+      const box = $('#key-list');
+      box.innerHTML = '<tr><td class="loading">加载中…</td></tr>';
+      try {
+        const { data } = await api(`/api/keys${supplier ? `?supplier=${supplier}` : ''}`);
+        if (!data.length) { box.innerHTML = '<tr><td class="empty">暂无 key</td></tr>'; return; }
+        box.innerHTML = '<tr><th>Key</th><th>供应商</th><th>ID</th><th></th></tr>'
+          + data.map((k) => `<tr>
+            <td class="mono">${k.key_masked}</td>
+            <td><span class="tag">${SUPPLIERS[k.supplier] || k.supplier}</span></td>
+            <td>#${k.id}</td>
+            <td style="text-align:right"><button class="btn-del" onclick="deleteKey(${k.id})">删除</button></td>
+          </tr>`).join('');
+      } catch (e) { box.innerHTML = ''; toast(e.message, 'error'); }
+    }
+    async function importKeys() {
+      const supplier = $('#imp-supplier').value;
+      const keys = $('#imp-keys').value.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (!keys.length) { toast('请输入至少一个 key', 'error'); return; }
+      try {
+        const { message } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ supplier, keys }) });
+        $('#imp-keys').value = ''; toast(message); loadKeys();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    async function deleteKey(id) {
+      if (!confirm(`确认删除 key #${id}?`)) return;
+      try { const { message } = await api(`/api/keys/${id}`, { method: 'DELETE' }); toast(message); loadKeys(); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+
+    // ---- 公益站 ----
+    function showSiteForm() { $('#site-add').hidden = false; $('#site-add-toggle').hidden = true; }
+    function hideSiteForm() { $('#site-add').hidden = true; $('#site-add-toggle').hidden = !getToken(); }
+    function addTag(t) {
+      t = String(t).trim();
+      if (!t || selectedTags.includes(t)) return;
+      if (selectedTags.length >= 10) { toast('标签最多 10 个', 'error'); return; }
+      selectedTags.push(t); renderSelectedTags();
+    }
+    function removeTag(t) { selectedTags = selectedTags.filter((x) => x !== t); renderSelectedTags(); }
+    function renderSelectedTags() {
+      $('#tag-selected').innerHTML = selectedTags.length
+        ? selectedTags.map((t) => `<span class="tag-chip">${escapeHtml(t)}<b data-rm="${escapeHtml(t)}">×</b></span>`).join('')
+        : '<span class="tag-empty">未选标签</span>';
+    }
+    async function loadSites() {
+      const grid = $('#site-grid');
+      grid.innerHTML = '<div class="loading">加载中…</div>';
+      try {
+        const { data } = await api('/api/sites');
+        const canDel = !!getToken();
+        if (!data.length) { grid.innerHTML = '<div class="empty">还没有收录公益站点' + (canDel ? ',点上方「添加」加一个吧' : '') + '</div>'; return; }
+        grid.innerHTML = data.map((s) => siteCard(s, canDel)).join('');
+      } catch (e) { grid.innerHTML = ''; toast(e.message, 'error'); }
+    }
+    function siteCard(s, canDel) {
+      const del = canDel ? `<button class="site-del" title="删除" onclick="deleteSite(${s.id}, event)">×</button>` : '';
+      const tags = (s.tags || []).map((t) => `<span class="site-tag">${escapeHtml(t)}</span>`).join('');
+      const note = s.note ? `<div class="site-note">${escapeHtml(s.note)}</div>` : '';
+      return `<a class="site-card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">
+        ${del}
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${tags ? `<div class="site-tags">${tags}</div>` : ''}
+        ${note}
+        <div class="site-url">${escapeHtml(displayUrl(s.url))}</div>
+      </a>`;
+    }
+    async function addSite() {
+      const name = $('#site-name').value.trim();
+      const url = $('#site-url').value.trim();
+      const note = $('#site-note').value.trim();
+      if (!name || !url) { toast('站点名称和链接必填', 'error'); return; }
+      try {
+        const { message } = await api('/api/sites', { method: 'POST', body: JSON.stringify({ name, url, note, tags: selectedTags }) });
+        $('#site-name').value = $('#site-url').value = $('#site-note').value = '';
+        selectedTags = []; renderSelectedTags();
+        hideSiteForm();
+        toast(message); loadSites();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    async function deleteSite(id, ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (!confirm('确认删除该公益站点?')) return;
+      try { const { message } = await api(`/api/sites/${id}`, { method: 'DELETE' }); toast(message); loadSites(); }
+      catch (e) { toast(e.message, 'error'); }
+    }
+
+    // ---- 初始化 ----
+    $('#local-supplier').innerHTML = supplierOptions(false);
+    renderSelectedTags();
+    document.querySelectorAll('.tabs button[data-tab]').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    document.querySelectorAll('.mode-switch button[data-mode]').forEach((b) => b.addEventListener('click', () => switchMode(b.dataset.mode)));
+    document.querySelectorAll('.th-input').forEach((inp) => {
+      inp.value = getThreshold();
+      inp.addEventListener('input', (e) => {
+        localStorage.setItem(TH_KEY, e.target.value || '0');
+        document.querySelectorAll('.th-input').forEach((o) => { if (o !== e.target) o.value = e.target.value; });
+        if (cache) cache();
+      });
+    });
+    $('#tag-custom').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(e.target.value); e.target.value = ''; } });
+    $('#tag-selected').addEventListener('click', (e) => { const t = e.target.getAttribute('data-rm'); if (t !== null) removeTag(t); });
+    $('#modal-token').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+    renderAuth();
+  </script>
+</body>
+</html>

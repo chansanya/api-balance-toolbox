@@ -1,0 +1,16 @@
+# 依赖
+node_modules/
+
+# wrangler 本地状态(含本地 D1 真实数据,严禁提交)
+.wrangler/
+
+# 本地环境变量 / 口令(严禁提交)
+.dev.vars
+.env
+
+# wrangler 配置(含账户敏感信息,严禁提交)
+wrangler.toml
+
+# 同步脚本产物(可能含真实数据,严禁提交;schema.sql 是源码不在此列)
+*-sync.sql
+seed_sites.sql

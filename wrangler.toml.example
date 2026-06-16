@@ -1,0 +1,10 @@
+name = "my-toolbox"
+compatibility_date = "2026-03-19"
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+pages_build_output_dir = "public"
+
+# D1 数据库绑定:代码中通过 env.DB 访问
+[[d1_databases]]
+binding = "DB"
+database_name = "balance"
+database_id = "YOUR_D1_DATABASE_ID"
