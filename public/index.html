@@ -134,6 +134,9 @@
     .site-del { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%;
       background: rgba(229,72,77,.1); color: #e5484d; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
     .site-del:hover { background: #e5484d; color: #fff; }
+    .site-edit { position: absolute; top: 8px; right: 36px; width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(0,91,234,.1); color: #005bea; font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .site-edit:hover { background: #005bea; color: #fff; }
 
     .modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
     .modal-mask { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
@@ -229,8 +232,8 @@
               <input id="tag-custom" placeholder="自定义标签,回车添加">
             </div>
             <div class="local-bar">
-              <button class="btn" onclick="addSite()">保存</button>
-              <button class="btn ghost" onclick="hideSiteForm()">收起</button>
+              <button class="btn" onclick="saveSite()">保存</button>
+              <button class="btn ghost" onclick="cancelEditSite()">取消</button>
             </div>
           </div>
         </div>
@@ -515,6 +518,7 @@
     }
     function siteCard(s, canDel) {
       const del = canDel ? `<button class="site-del" title="删除" onclick="deleteSite(${s.id}, event)">×</button>` : '';
+      const edit = canDel ? `<button class="site-edit" title="编辑" onclick="editSite(${s.id}, event)">✎</button>` : '';
 
       // 如果有"签到"标签且有签到地址，让签到标签可点击跳转
       const signinUrl = s.signin_url || s.url; // 没有签到地址就跳主站
@@ -527,27 +531,13 @@
       }).join('');
 
       const note = s.note ? `<div class="site-note">${escapeHtml(s.note)}</div>` : '';
-      return `<a class="site-card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">
-        ${del}
+      return `<a class="site-card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer" data-site='${JSON.stringify(s).replace(/'/g, "&#39;")}'>
+        ${del}${edit}
         <div class="site-name">${escapeHtml(s.name)}</div>
         ${tags ? `<div class="site-tags">${tags}</div>` : ''}
         ${note}
         <div class="site-url">${escapeHtml(displayUrl(s.url))}</div>
       </a>`;
-    }
-    async function addSite() {
-      const name = $('#site-name').value.trim();
-      const url = $('#site-url').value.trim();
-      const note = $('#site-note').value.trim();
-      const signin_url = $('#site-signin-url').value.trim();
-      if (!name || !url) { toast('站点名称和链接必填', 'error'); return; }
-      try {
-        const { message } = await api('/api/sites', { method: 'POST', body: JSON.stringify({ name, url, note, tags: selectedTags, signin_url }) });
-        $('#site-name').value = $('#site-url').value = $('#site-note').value = $('#site-signin-url').value = '';
-        selectedTags = []; renderSelectedTags();
-        hideSiteForm();
-        toast(message); loadSites();
-      } catch (e) { toast(e.message, 'error'); }
     }
     async function deleteSite(id, ev) {
       ev.preventDefault(); ev.stopPropagation();
@@ -560,6 +550,72 @@
 
       try { const { message } = await api(`/api/sites/${id}`, { method: 'DELETE' }); toast(message); loadSites(); }
       catch (e) { toast(e.message, 'error'); }
+    }
+
+    let editingSiteId = null; // 正在编辑的站点 ID
+    function editSite(id, ev) {
+      ev.preventDefault(); ev.stopPropagation();
+
+      // 从卡片的 data-site 属性获取站点数据
+      const card = ev.target.closest('.site-card');
+      const siteData = JSON.parse(card.dataset.site);
+
+      // 填充表单
+      $('#site-name').value = siteData.name || '';
+      $('#site-url').value = siteData.url || '';
+      $('#site-note').value = siteData.note || '';
+      $('#site-signin-url').value = siteData.signin_url || '';
+      selectedTags = Array.isArray(siteData.tags) ? [...siteData.tags] : [];
+      renderSelectedTags();
+
+      // 标记为编辑模式
+      editingSiteId = id;
+      $('#site-add .card-title').textContent = '✏️ 编辑公益站点';
+      showSiteForm();
+
+      // 滚动到表单
+      $('#site-add').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function saveSite() {
+      const name = $('#site-name').value.trim();
+      const url = $('#site-url').value.trim();
+      const note = $('#site-note').value.trim();
+      const signin_url = $('#site-signin-url').value.trim();
+      if (!name || !url) { toast('站点名称和链接必填', 'error'); return; }
+
+      try {
+        if (editingSiteId) {
+          // 更新现有站点
+          const { message } = await api(`/api/sites/${editingSiteId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ name, url, note, tags: selectedTags, signin_url })
+          });
+          toast(message);
+          editingSiteId = null;
+          $('#site-add .card-title').textContent = '➕ 添加公益站点';
+        } else {
+          // 添加新站点
+          const { message } = await api('/api/sites', {
+            method: 'POST',
+            body: JSON.stringify({ name, url, note, tags: selectedTags, signin_url })
+          });
+          toast(message);
+        }
+
+        $('#site-name').value = $('#site-url').value = $('#site-note').value = $('#site-signin-url').value = '';
+        selectedTags = []; renderSelectedTags();
+        hideSiteForm();
+        loadSites();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
+    function cancelEditSite() {
+      editingSiteId = null;
+      $('#site-add .card-title').textContent = '➕ 添加公益站点';
+      $('#site-name').value = $('#site-url').value = $('#site-note').value = $('#site-signin-url').value = '';
+      selectedTags = []; renderSelectedTags();
+      hideSiteForm();
     }
 
     // ---- 初始化 ----
