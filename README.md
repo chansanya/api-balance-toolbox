@@ -6,7 +6,7 @@
 - 💰 **按供应商查余额** —— 汇总 + 各供应商分 tab,余额升序、低于阈值标红
 - 🔑 **Key 管理** —— key 存 D1 数据库,批量导入 / 删除,列表脱敏
 - 🔍 **本地临时查询** —— 免登录,手动输 key 即查,不写入数据库
-- 🏵 **公益站收录** —— 卡片展示(名称 / 链接 / 简介 / 标签),免登录浏览,登录后增删
+- 🏵 **公益站收录** —— 卡片展示(名称 / 标签 / 简介),免登录浏览,登录后增 / 改 / 删;签到标签可一键跳转签到页
 - 🔒 **访问鉴权** —— 管理 / 远程接口校验口令;`/api/check` 与 `/api/sites`(GET)公开
 
 ---
@@ -32,9 +32,9 @@ cp .env.example .env
 - `CLOUDFLARE_API_TOKEN`: 在 [Cloudflare Dashboard → API Tokens](https://dash.cloudflare.com/profile/api-tokens) 创建
 - `CLOUDFLARE_ACCOUNT_ID`: 在 Cloudflare Dashboard 右侧栏可找到
 
-同时编辑 `wrangler.toml`,替换:
-- `account_id`: 填入你的 Cloudflare Account ID
-- `database_id`: 创建 D1 数据库后填入(见下一步)
+同时编辑 `wrangler.toml`,替换 `database_id`(创建 D1 数据库后填入,见下一步)。
+
+> ⚠️ Pages 项目的 `wrangler.toml` **不要写 `account_id`**(会报错),账户由 `wrangler login` 或 `.env` 里的 `CLOUDFLARE_ACCOUNT_ID` 决定。
 
 ---
 
@@ -136,7 +136,10 @@ wrangler d1 execute balance --local --command "SELECT * FROM sites"
 
 列表按余额**升序**,低于阈值的整行标红 +「余额不足」徽章,查询失败的沉底。右上角「退出登录」清口令。
 
-**🏵 公益站**:点右上角(登录左边)发光的「公益站」入口切换。卡片显示站点(名称 → 标签 → 简介 → 链接,整卡可点),**免登录浏览**。登录后顶部出现折叠的「＋ 添加」(名称 / 链接 / 简介 + 标签,内置 `签到 / linux.do / 量大管饱` 或自定义),每张卡可删。
+**🏵 公益站**:点右上角(登录左边)发光的「公益站」入口切换。卡片显示站点(名称 → 标签 → 简介,整卡可点跳转),**免登录浏览**。登录后:
+- 顶部出现折叠的「＋ 添加」(名称 / 链接 / 简介 + 标签 + 可选签到地址,内置 `签到 / linux.do / 量大管饱` 或自定义)
+- 每张卡右上角有 **✎ 编辑** / **× 删除**(删除二次确认防误删)
+- 带「签到」标签且填了签到地址的,点该标签直接跳转签到页
 
 ---
 
@@ -152,7 +155,8 @@ wrangler d1 execute balance --local --command "SELECT * FROM sites"
 | `/api/keys` | POST | 是 | 批量导入 `{"supplier","keys":[...]}` |
 | `/api/keys/:id` | DELETE | 是 | 删除 key |
 | `/api/sites` | GET | 否 | 列出公益站(公开) |
-| `/api/sites` | POST | 是 | 新增 `{"name","url","note?","tags?":[]}` |
+| `/api/sites` | POST | 是 | 新增 `{"name","url","note?","tags?":[],"signin_url?"}` |
+| `/api/sites/:id` | PUT | 是 | 编辑(字段同新增) |
 | `/api/sites/:id` | DELETE | 是 | 删除公益站 |
 
 ---
@@ -162,17 +166,25 @@ wrangler d1 execute balance --local --command "SELECT * FROM sites"
 本地 `pages dev` 里加的公益站,要发布到线上得同步到远程 D1。用同步脚本:
 
 ```bash
-cd pages
-bash sync.sh                                                  # 同步 sites 表(冲突键 url),生成 sites-sync.sql
+bash sync.sh                                                  # 读本地 sites 表,生成 sites-sync.sql(全量替换)
 wrangler d1 execute balance --remote --file=sites-sync.sql    # 推送到远程
 wrangler d1 execute balance --remote --command "SELECT id,name,url FROM sites"   # 验证
 ```
 
-- **增量 UPSERT**:同 url 的站更新、新 url 的插入,**不删除**远程已有数据,可反复跑。
+- **全量替换**:先 `DELETE` 远程表,再插入本地全部数据——远程 = 本地,**完全一致**。
 - **不含建表**:远程表需已存在(第二步 `schema.sql` 已建)。
-- **通用任意表**:`bash sync.sh <表名> <冲突键列>`,例如 `bash sync.sh api_keys api_key`(冲突键=判断"同一条记录"的列)。
+- **通用任意表**:`bash sync.sh <表名>`,例如 `bash sync.sh api_keys`。
 
-> 原理:[`sync.sh`](sync.sh) 调 `wrangler d1 execute --local` 读本地表(由 wrangler 定位库,不会读错文件),交给 [`gen-sql.mjs`](gen-sql.mjs) 解析、转义、生成 UPSERT SQL。自动忽略 `id` / `created_at` 列。
+> 原理:[`sync.sh`](sync.sh) 调 `wrangler d1 execute --local` 读本地表(由 wrangler 定位库,不会读错文件),交给 [`gen-sql.mjs`](gen-sql.mjs) 解析、转义、生成 `DELETE` + `INSERT` SQL。自动忽略 `id` / `created_at` 列。
+
+### 数据库结构升级
+
+表结构变更统一记录在 [`migrations.sql`](migrations.sql),每次升级注释掉旧版本、追加新版本,方便追溯:
+
+```bash
+wrangler d1 execute balance --remote --file=migrations.sql    # 执行未注释的升级语句
+wrangler d1 execute balance --local  --file=migrations.sql    # 本地也要执行
+```
 
 ---
 
