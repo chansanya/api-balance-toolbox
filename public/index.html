@@ -128,6 +128,7 @@
     .site-tags { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 6px; margin-bottom: 10px; }
     .site-tag { font-size: .7rem; background: #eef4ff; color: #005bea; padding: 2px 9px; border-radius: 999px; font-weight: 500; display: inline-block; }
     .site-tag-signin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; }
+    .site-tag-ban { background: linear-gradient(135deg, #f5576c 0%, #e5484d 100%); color: white; font-weight: 600; }
     .site-tag-clickable { cursor: pointer; text-decoration: none; transition: all .2s; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; }
     .site-tag-clickable:hover { transform: translateY(-1px) scale(1.05); box-shadow: 0 4px 12px rgba(102,126,234,.4); }
     .site-note { font-size: .85rem; color: #6c757d; line-height: 1.5; margin-bottom: 12px; padding-left: 6px;
@@ -230,6 +231,7 @@
                 <span class="tag-preset" onclick="addTag('签到')">签到</span>
                 <span class="tag-preset" onclick="addTag('linux.do')">linux.do</span>
                 <span class="tag-preset" onclick="addTag('量大管饱')">量大管饱</span>
+                <span class="tag-preset" onclick="addTag('ban')">ban</span>
               </div>
               <input id="tag-custom" placeholder="自定义标签,回车添加">
             </div>
@@ -522,9 +524,10 @@
       const del = canDel ? `<button class="site-del" title="删除" onclick="deleteSite(${s.id}, event)">×</button>` : '';
       const edit = canDel ? `<button class="site-edit" title="编辑" onclick="editSite(${s.id}, event)">✎</button>` : '';
 
-      // 签到标签特殊样式
+      // 特殊标签样式
       const tags = (s.tags || []).map((t) => {
         const tagText = escapeHtml(t);
+        if (t === 'ban') return `<span class="site-tag site-tag-ban">${tagText}</span>`;
         if (t === '签到') {
           // 有签到地址：可点击跳转
           if (s.signin_url) {
